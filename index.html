@@ -406,11 +406,11 @@ async function load(){
     S.signups=(j.signups||[]).map(x=>({name:String(x.name),outing:String(x.outing),me:!!x.me}));
     S.plans={};Object.entries(j.dates||{}).forEach(([k,v])=>{if(v)S.plans[k]={date:v}});
     S.hidden=new Set(j.hidden||[]);S.loaded=true;notice("");render();
-  }catch(e){notice("Couldn't load the sign-up list right now. Try refreshing in a minute.")}
+  }catch(e){if(!S.loaded)notice("Couldn't load the sign-up list right now. Try refreshing in a minute.")}
 }
 async function post(body){
-  const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({cid:CID},body))});
-  return r.json();
+  const r=await fetch(API_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({cid:CID},body))});
+  return r;
 }
 async function addMe(eid,name){
   S.signups.push({name,outing:eid,me:true});render();
