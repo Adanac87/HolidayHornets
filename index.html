@@ -148,7 +148,11 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .crew-label{display:flex;align-items:center;gap:8px;font-size:14px}
 .crew-label .count{font-family:var(--display);font-weight:800;font-size:13px;min-width:24px;text-align:center;padding:1px 8px;border-radius:999px;background:var(--b-soft);color:var(--b-ink);font-variant-numeric:tabular-nums}
 .namelist{display:flex;flex-wrap:wrap;gap:6px}
-.namelist .pchip{padding:2px 10px 2px 3px}
+.namelist .pchip{padding:3px 10px}
+a.pchip{color:inherit;text-decoration:none}
+a.pchip:hover{border-color:var(--b-accent)}
+.pchip .ig{font-size:12px;color:var(--muted)}
+.ask input.ig-in{flex:0 1 180px}
 .namelist .pchip img{width:20px;height:20px;border-radius:50%}
 .namelist .pchip.me{border-color:var(--b-accent);font-weight:700}
 .ask-note{flex-basis:100%;margin:0;font-size:12px;opacity:.8}
@@ -218,7 +222,8 @@ footer{font-size:13px;color:var(--muted);padding-block:10px 40px}
       <div class="eyebrow">Vancouver &amp; the Lower Mainland · 2026–27 season</div>
       <h1>Holiday <span>Hornets</span></h1>
       <p class="lede big">The holidays are a time to meet new people, spend time with friends and do fun things together.</p>
-      <p class="lede">Holiday Hornets is Michael Sorgiovanni's crew for doing exactly that, from pumpkin patches to Christmas lights to the Hot Chocolate Festival. Everyone's welcome, so bring a friend. Browse the list, tap <b>Interested</b> on anything you'd join, and we'll set dates for the outings with the biggest swarm.</p>
+      <p class="lede">Michael Sorgiovanni started Holiday Hornets when he lived in Vancouver, and now he's bringing it back. It's a way to see what's happening around the city each season, meet new people and do things together, whether you join the group, bring a friend or make it a date night. The important thing is that you get out there and enjoy the city.</p>
+      <p class="lede">Browse the list, tap <b>Interested</b> on anything you'd join, and we'll set dates for the outings with the biggest swarm.</p>
       <div class="seasons"><a href="#fall">Fall</a><a href="#holiday">Holiday season</a><a href="#winter">Winter</a></div>
     </div>
     <figure class="host">
@@ -240,6 +245,8 @@ footer{font-size:13px;color:var(--muted);padding-block:10px 40px}
     <div class="me">
       <label for="nick">Your name on the list</label>
       <input id="nick" maxlength="30" placeholder="e.g. Michael S.">
+      <label for="ig">Instagram</label>
+      <input id="ig" maxlength="31" placeholder="@yourhandle" autocapitalize="off" autocorrect="off" spellcheck="false">
     </div>
   </div>
   <p class="notice" id="notice" hidden></p>
@@ -319,8 +326,9 @@ const API_URL="https://script.google.com/macros/s/AKfycbyryljoueZye74yDva4ijAoRE
 
 const el=id=>document.getElementById(id);
 const S={filter:"all",signups:[],plans:{},hidden:new Set(),asking:null,loaded:false};
-let CID="",MYNAME="";
-try{CID=localStorage.getItem("hh-cid")||"";MYNAME=localStorage.getItem("hh-name")||"";const f=localStorage.getItem("hh-filter");if(f)S.filter=f}catch(e){}
+let CID="",MYNAME="",MYIG="";
+function cleanIG(v){return String(v||"").trim().replace(/^@+/,"").replace(/^https?:\/\/(www\.)?instagram\.com\//i,"").replace(/[^A-Za-z0-9._]/g,"").slice(0,30)}
+try{CID=localStorage.getItem("hh-cid")||"";MYNAME=localStorage.getItem("hh-name")||"";MYIG=localStorage.getItem("hh-ig")||"";const f=localStorage.getItem("hh-filter");if(f)S.filter=f}catch(e){}
 if(!CID){CID=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);try{localStorage.setItem("hh-cid",CID)}catch(e){}}
 
 function allEvents(){return EVENTS.filter(e=>!S.hidden.has(e.id))}
@@ -379,7 +387,10 @@ function card(e,isIn){
   const row=node("div","crew");
   const lbl=node("div","crew-label");lbl.append(node("b",null,"Interested"),node("span","count",String(crew.length)));
   const who=node("div","namelist");
-  if(crew.length)crew.forEach(x=>who.append(node("span","pchip"+(x.me?" me":""),x.name)));
+  if(crew.length)crew.forEach(x=>{
+    const ig=cleanIG(x.ig);const chip=node(ig?"a":"span","pchip"+(x.me?" me":""));chip.append(document.createTextNode(x.name));
+    if(ig){chip.href="https://www.instagram.com/"+ig+"/";chip.target="_blank";chip.rel="noopener";chip.title="@"+ig+" on Instagram";chip.append(node("span","ig","@"+ig))}
+    who.append(chip)});
   else who.append(node("span","names",S.loaded||!API_URL?"No one yet. Be the first.":"Loading names..."));
   const btn=node("button","join"+(isIn?" on":""),isIn?"You're interested":"Interested");
   btn.setAttribute("aria-pressed",String(isIn));btn.disabled=!API_URL;
@@ -390,8 +401,9 @@ function card(e,isIn){
     const f=node("form","ask");const lab=node("label",null,"Add your name to the list for "+e.title);lab.htmlFor="ask-"+e.id;
     const inp=node("input");inp.id="ask-"+e.id;inp.required=true;inp.maxLength=30;inp.placeholder="First and last name";inp.value=MYNAME;
     const ok=node("button","join","Add my name");ok.type="submit";const no=node("button","linkbtn","Cancel");no.type="button";no.onclick=()=>{S.asking=null;render()};
-    f.append(lab,inp,ok,no,node("p","ask-note","Everyone who opens this page can see the names on this list."));
-    f.onsubmit=ev=>{ev.preventDefault();const v=inp.value.trim().slice(0,30);if(!v)return;S.asking=null;setName(v,false);addMe(e.id,v)};
+    const igi=node("input","ig-in");igi.id="ask-ig-"+e.id;igi.maxLength=31;igi.placeholder="@instagram (optional)";igi.value=MYIG?"@"+MYIG:"";igi.autocapitalize="off";igi.spellcheck=false;igi.setAttribute("aria-label","Instagram handle (optional)");
+    f.append(lab,inp,igi,ok,no,node("p","ask-note","Everyone who opens this page can see the names and Instagram handles on this list."));
+    f.onsubmit=ev=>{ev.preventDefault();const v=inp.value.trim().slice(0,30);if(!v)return;const g=cleanIG(igi.value);S.asking=null;setName(v,false);setIG(g,false);addMe(e.id,v,g)};
     c.append(f);
   }
   return c;
@@ -403,7 +415,7 @@ async function load(){
   try{
     const r=await fetch(API_URL+"?cid="+encodeURIComponent(CID)+"&t="+Date.now());
     const j=await r.json();
-    S.signups=(j.signups||[]).map(x=>({name:String(x.name),outing:String(x.outing),me:!!x.me}));
+    S.signups=(j.signups||[]).map(x=>({name:String(x.name),outing:String(x.outing),ig:String(x.ig||""),me:!!x.me}));
     S.plans={};Object.entries(j.dates||{}).forEach(([k,v])=>{if(v)S.plans[k]={date:v}});
     S.hidden=new Set(j.hidden||[]);S.loaded=true;notice("");render();
   }catch(e){if(!S.loaded)notice("Couldn't load the sign-up list right now. Try refreshing in a minute.")}
@@ -412,9 +424,9 @@ async function post(body){
   const r=await fetch(API_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({cid:CID},body))});
   return r;
 }
-async function addMe(eid,name){
-  S.signups.push({name,outing:eid,me:true});render();
-  try{await post({action:"add",outing:eid,name})}catch(e){notice("That didn't save. Check your connection and try again.")}
+async function addMe(eid,name,ig){
+  S.signups.push({name,outing:eid,ig:ig||"",me:true});render();
+  try{await post({action:"add",outing:eid,name,ig:ig||""})}catch(e){notice("That didn't save. Check your connection and try again.")}
   load();
 }
 async function removeMe(eid){
@@ -424,9 +436,16 @@ async function removeMe(eid){
 }
 function setName(v,sync){
   MYNAME=v;el("nick").value=v;try{localStorage.setItem("hh-name",v)}catch(e){}
-  if(sync&&API_URL&&myEvents().length){S.signups.forEach(x=>{if(x.me)x.name=v});render();post({action:"rename",name:v}).catch(()=>{})}
+  if(sync&&API_URL&&myEvents().length){S.signups.forEach(x=>{if(x.me)x.name=v});render();post({action:"rename",name:v,ig:MYIG}).catch(()=>{})}
 }
 let nickTimer;
+function setIG(v,sync){
+  MYIG=v;if(document.activeElement!==el("ig"))el("ig").value=v?"@"+v:"";try{localStorage.setItem("hh-ig",v)}catch(e){}
+  if(sync&&API_URL&&MYNAME&&myEvents().length){S.signups.forEach(x=>{if(x.me)x.ig=v});render();post({action:"rename",name:MYNAME,ig:v}).catch(()=>{})}
+}
+let igTimer;
+el("ig").value=MYIG?"@"+MYIG:"";
+el("ig").addEventListener("input",e=>{clearTimeout(igTimer);const v=cleanIG(e.target.value);igTimer=setTimeout(()=>setIG(v,true),900)});
 el("nick").value=MYNAME;
 el("nick").addEventListener("input",e=>{clearTimeout(nickTimer);const v=e.target.value.trim().slice(0,30);if(!v)return;nickTimer=setTimeout(()=>setName(v,true),900)});
 el("tabs").addEventListener("click",e=>{const t=e.target.closest(".tab");if(!t)return;S.filter=t.dataset.f;try{localStorage.setItem("hh-filter",S.filter)}catch(_){}render()});
