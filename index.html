@@ -246,6 +246,7 @@ footer{font-size:13px;color:var(--muted);padding-block:10px 40px}
       <input id="nick" maxlength="30" placeholder="e.g. Michael S.">
       <label for="ig">Instagram</label>
       <input id="ig" maxlength="31" placeholder="@yourhandle" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <p class="sm" style="flex-basis:100%">Fill this in once, then just tap <b>Interested</b> on any outing.</p>
     </div>
   </div>
   <p class="notice" id="notice" hidden></p>
@@ -336,13 +337,13 @@ function render(){
   const today=new Date().toISOString().slice(0,10);
   const up=Object.entries(S.plans).filter(([k,p])=>p.date>=today&&evs.some(e=>e.id===k)).sort((a,b)=>a[1].date<b[1].date?-1:1)[0];
   el("s-next").textContent=up?fmtDate(up[1].date):"TBD";
-  const board=el("board");board.textContent="";
+  const board=el("board");const keepY=window.scrollY;board.style.minHeight=board.offsetHeight+"px";board.textContent="";
   let list=evs;
   if(S.filter==="mine")list=evs.filter(e=>myEv.includes(e.id));
   else if(S.filter==="free")list=evs.filter(isFree);else if(S.filter==="bars")list=evs.filter(e=>e.bar);
   else if(S.filter==="planned")list=evs.filter(e=>S.plans[e.id]).sort((a,b)=>S.plans[a.id].date<S.plans[b.id].date?-1:1);
   else if(S.filter!=="all")list=evs.filter(e=>e.season===S.filter);
-  if(!list.length){const w=node("div","wrap");w.append(node("p","empty",S.filter==="mine"?"You haven't picked anything yet. Tap Interested on an outing to add it here.":S.filter==="planned"?"No dates set yet. Once outings have a date they'll show up here, soonest first.":"Nothing here yet."));board.append(w);return}
+  if(!list.length){board.style.minHeight="";const w=node("div","wrap");w.append(node("p","empty",S.filter==="mine"?"You haven't picked anything yet. Tap Interested on an outing to add it here.":S.filter==="planned"?"No dates set yet. Once outings have a date they'll show up here, soonest first.":"Nothing here yet."));board.append(w);return}
   const groups=S.filter==="planned"?[["planned",list]]:Object.keys(SEASONS).map(s=>[s,list.filter(e=>e.season===s)]).filter(g=>g[1].length);
   for(const [key,items] of groups){
     const sec=node("section","band "+key);sec.id=key;
@@ -354,6 +355,7 @@ function render(){
     const grid=node("div","grid");items.forEach(e=>grid.append(card(e,myEv.includes(e.id))));
     w.append(head,grid);sec.append(w);board.append(sec);
   }
+  board.style.minHeight="";if(Math.abs(window.scrollY-keepY)>2)window.scrollTo(0,keepY);
 }
 
 function card(e,isIn){
@@ -383,15 +385,15 @@ function card(e,isIn){
   const btn=node("button","join"+(isIn?" on":""),isIn?"You're interested":"Interested");
   btn.setAttribute("aria-pressed",String(isIn));btn.disabled=!API_URL;
   if(isIn)btn.title="Tap to take your name off";
-  btn.onclick=()=>{if(isIn){removeMe(e.id);return}S.asking=e.id;render();const f=el("ask-"+e.id);if(f){f.focus();f.select()}};
+  btn.onclick=()=>{if(isIn){removeMe(e.id);return}const topName=el("nick").value.trim().slice(0,30)||MYNAME;const topIG=cleanIG(el("ig").value)||"";if(topName){clearTimeout(nickTimer);clearTimeout(igTimer);if(topName!==MYNAME)setName(topName,false);if(topIG!==MYIG)setIG(topIG,false);addMe(e.id,topName,topIG);return}S.asking=e.id;render();const f=el("ask-"+e.id);if(f){f.focus({preventScroll:true})}};
   const bar=node("div","crew-top");bar.append(lbl,btn);row.append(bar,who);c.append(row);
   if(S.asking===e.id){
-    const f=node("form","ask");const lab=node("label",null,"Add your name to the list for "+e.title);lab.htmlFor="ask-"+e.id;
-    const inp=node("input");inp.id="ask-"+e.id;inp.required=true;inp.maxLength=30;inp.placeholder="First and last name";inp.value=MYNAME;
-    const ok=node("button","join","Add my name");ok.type="submit";const no=node("button","linkbtn","Cancel");no.type="button";no.onclick=()=>{S.asking=null;render()};
-    const igi=node("input","ig-in");igi.id="ask-ig-"+e.id;igi.maxLength=31;igi.placeholder="@instagram (optional)";igi.value=MYIG?"@"+MYIG:"";igi.autocapitalize="off";igi.spellcheck=false;igi.setAttribute("aria-label","Instagram handle (optional)");
+    const f=node("form","ask");const lab=node("label",null,"Add your name to the list for "+e.title+" (you only need to do this once)");lab.htmlFor="ask-"+e.id;
+    const inp=node("input");inp.id="ask-"+e.id;inp.required=true;inp.maxLength=30;inp.placeholder="First and last name";inp.value=S.draftName||MYNAME;inp.oninput=()=>{S.draftName=inp.value};
+    const ok=node("button","join","Add my name");ok.type="submit";const no=node("button","linkbtn","Cancel");no.type="button";no.onclick=()=>{S.asking=null;S.draftName=S.draftIG=null;render()};
+    const igi=node("input","ig-in");igi.id="ask-ig-"+e.id;igi.maxLength=31;igi.placeholder="@instagram (optional)";igi.value=S.draftIG!=null?S.draftIG:(MYIG?"@"+MYIG:"");igi.oninput=()=>{S.draftIG=igi.value};igi.autocapitalize="off";igi.spellcheck=false;igi.setAttribute("aria-label","Instagram handle (optional)");
     f.append(lab,inp,igi,ok,no,node("p","ask-note","Everyone who opens this page can see the names and Instagram handles on this list."));
-    f.onsubmit=ev=>{ev.preventDefault();const v=inp.value.trim().slice(0,30);if(!v)return;const g=cleanIG(igi.value);S.asking=null;setName(v,false);setIG(g,false);addMe(e.id,v,g)};
+    f.onsubmit=ev=>{ev.preventDefault();const v=inp.value.trim().slice(0,30);if(!v)return;const g=cleanIG(igi.value);S.asking=null;S.draftName=S.draftIG=null;setName(v,false);setIG(g,false);addMe(e.id,v,g)};
     c.append(f);
   }
   return c;
