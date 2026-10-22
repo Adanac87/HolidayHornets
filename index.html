@@ -94,6 +94,14 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .band.holiday,.card[data-s="holiday"]{--b-bg:var(--hol-bg);--b-ink:var(--hol-ink);--b-accent:var(--hol-accent);--b-soft:var(--hol-soft);--b-line:var(--hol-line)}
 .band.winter,.card[data-s="winter"]{--b-bg:var(--win-bg);--b-ink:var(--win-ink);--b-accent:var(--win-accent);--b-soft:var(--win-soft);--b-line:var(--win-line)}
 .band.planned{--b-bg:var(--bg)}
+.band.featured,.card[data-s="featured"]{--b-bg:#1a0a0e;--b-ink:#fbe9ec;--b-accent:#c8102e;--b-soft:#3a1219;--b-line:#5a1a26}
+.band.featured{background:radial-gradient(ellipse at 20% 0,#5a1020 0,transparent 60%),linear-gradient(180deg,#22090f 0,#2c0b13 100%)}
+.band.featured h2{color:#ffd9de}.band.featured .band-sub{color:#f3c1c8}
+.band.featured .grid{grid-template-columns:minmax(0,560px)}
+.excl{justify-self:start;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;padding:3px 10px;border-radius:999px;background:#c8102e;color:#fff}
+.card .cover{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;background:#2c0b13}
+a.join.tix{display:block;text-align:center;text-decoration:none;background:#c8102e;color:#fff;font-size:16px;padding:11px 16px}
+a.join.tix:hover{background:#a50d26}
 .band::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.16}
 .band.fall{background:linear-gradient(180deg,#1f1129 0,#3a1b30 170px,#6b2f22 280px,var(--fall-bg) 430px)}
 .band.fall::before{background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170'><ellipse cx='30' cy='42' rx='14' ry='11' fill='%23e46f1f'/><ellipse cx='30' cy='42' rx='5' ry='11' fill='%23c85a14'/><rect x='28' y='27' width='4' height='7' rx='1' fill='%234a3315'/><path d='M96 34c5-8 10-8 12-3 1-3 3-4 4-4s3 1 4 4c2-5 7-5 12 3-4-2-7-1-8 2-1-2-4-2-5 1-1-3-4-3-5-1-1-3-4-4-8-2z' fill='%233a2347'/><path d='M110 95l3 7 6-3-2 8 7-2-4 6 5 3-8 2 1 7-6-4h-2l-6 4 1-7-8-2 5-3-4-6 7 2-2-8 6 3z' fill='%23c9411c'/><ellipse cx='40' cy='130' rx='10' ry='4' transform='rotate(-30 40 130)' fill='%23f2a33a'/><path d='M150 150c3-5 6-5 7-2 1-3 4-3 7 2-2-1-4 0-5 1-1-1-3-1-4 0-1-1-3-2-5-1z' fill='%233a2347'/></svg>") 0 0/170px 170px;opacity:.22}
@@ -267,6 +275,7 @@ footer{font-size:13px;color:var(--muted);padding-block:10px 40px}
 
 <script>
 const ICONS={
+ featured:'<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="11" width="40" height="28" rx="3" fill="#c8102e"/><path d="M4 14l20 14 20-14" fill="none" stroke="#8a0b20" stroke-width="2.5"/><circle cx="24" cy="27" r="5" fill="#f2b81f"/></svg>',
  fall:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M22 6c0-2 4-3 5 0l-1 6h-4z" fill="#5c7a2a"/><ellipse cx="24" cy="28" rx="20" ry="16" fill="#f07a1a"/><ellipse cx="24" cy="28" rx="8" ry="16" fill="#d9620e"/><path d="M12 24l6-4 2 6zM36 24l-6-4-2 6zM12 32c4 5 8 5 12 3 4 2 8 2 12-3-2 6-7 8-12 8s-10-2-12-8z" fill="#2a1630"/></svg>',
  holiday:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6l12 15h-6l10 12h-7l9 9H6l9-9H8l10-12h-6z" fill="#2f8a5b"/><rect x="21" y="42" width="6" height="5" fill="#6b4422"/><path d="M24 1l1.6 3.4 3.7.5-2.7 2.6.7 3.7-3.3-1.8-3.3 1.8.7-3.7-2.7-2.6 3.7-.5z" fill="#f6c445"/><circle cx="19" cy="25" r="2" fill="#ff5a6e"/><circle cx="29" cy="31" r="2" fill="#f6c445"/><circle cx="17" cy="37" r="2" fill="#8cc0ff"/><circle cx="31" cy="39" r="2" fill="#ff5a6e"/></svg>',
  winter:'<svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="#e8f2ff" stroke-width="3" stroke-linecap="round"><path d="M24 3v42M5.8 13.5l36.4 21M5.8 34.5l36.4-21"/><path d="M18 6l6 5 6-5M18 42l6-5 6 5M5 21l8-2-3-7M43 21l-8-2 3-7M5 27l8 2-3 7M43 27l-8 2 3 7"/></svg>',
@@ -274,9 +283,11 @@ const ICONS={
 };
 const PIN='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>';
 const CAL='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4" stroke-linecap="round"/></svg>';
-const SEASONS={fall:["Fall","Pumpkins, mazes, salmon runs and spooky stuff"],holiday:["Holiday season","Lights, markets, festivals, holiday bars and snow days"],winter:["Winter","Snow days, hot chocolate and the new year"]};
+const SEASONS={featured:["Exclusive","One night only"],fall:["Fall","Pumpkins, mazes, salmon runs and spooky stuff"],holiday:["Holiday season","Lights, markets, festivals, holiday bars and snow days"],winter:["Winter","Snow days, hot chocolate and the new year"]};
 
 const EVENTS=[
+ // FEATURED
+ {id:"wildcard",season:"featured",exclusive:true,title:"Wildcard: Year End. No Rules. One Night.",city:"Vancouver, BC",when:"Fri, Dec 4 · 7:30 PM to 1:30 AM",img:"https://images.lumacdn.com/cdn-cgi/image/format=auto,fit=cover,dpr=2,quality=80,width=640,height=360/uploads/b7/188a9211-dda8-45fb-868d-0effe6b8f1e5.jpg",imgAlt:"A hand holding a red envelope sealed with red wax",blurb:"Event for creators, founders, operators, investors and artists.",url:"https://luma.com/Dec4th?utm_id=97760_v0_s00_e0_tv4",tickets:"https://luma.com/Dec4th?utm_id=97760_v0_s00_e0_tv4"},
  // FALL
           {id:"cornucopia",season:"holiday",title:"Whistler Cornucopia",city:"Whistler",venue:"Whistler Conference Centre and venues around the village",when:"Nov 5 to 15, 2026",cost:"Varies by event (packages from $105)",time:"Weekend trip",bar:true,blurb:"Whistler's food and drink festival turns 30: 40+ wine, spirits and beer seminars, chef demos, winery dinners and après parties. Pick a weekend and a few events.",url:"https://www.whistlercornucopia.com/"}, // HOLIDAY
  {id:"xmasmarket",season:"holiday",title:"Vancouver Christmas Market",city:"Vancouver",venue:"Jack Poole Plaza, Coal Harbour",when:"Mid Nov to Dec 24",cost:"$15 to $20 entry + food",time:"2 to 3 hours",blurb:"German market food, mulled wine and the carousel by the Olympic cauldron.",url:"https://vancouverchristmasmarket.com"},
@@ -351,7 +362,7 @@ function render(){
     const w=node("div","wrap");const head=node("div","band-head");
     const ic=node("span");ic.innerHTML=ICONS[key];head.append(ic.firstChild);
     head.append(node("h2",null,key==="planned"?"On the calendar":SEASONS[key][0]));
-    head.append(node("div","band-sub",key==="planned"?"Soonest first":SEASONS[key][1]+" · "+items.length+" outings"));
+    head.append(node("div","band-sub",key==="planned"?"Soonest first":key==="featured"?SEASONS[key][1]:SEASONS[key][1]+" · "+items.length+" outings"));
     const grid=node("div","grid");items.forEach(e=>grid.append(card(e,myEv.includes(e.id))));
     w.append(head,grid);sec.append(w);board.append(sec);
   }
@@ -360,6 +371,7 @@ function render(){
 
 function card(e,isIn){
   const c=node("article","card"+(isIn?" in":""));c.dataset.s=e.season;
+  if(e.exclusive)c.append(node("span","excl","Exclusive"));
   const h=node("h3");
   if(e.url){const a=node("a",null,e.title);a.href=e.url;a.target="_blank";a.rel="noopener";h.append(a)}else h.textContent=e.title;
   const place=node("div","place");const city=node("div","city");city.innerHTML=PIN;city.append(document.createTextNode(e.city||"TBD"));
@@ -367,12 +379,14 @@ function card(e,isIn){
   const plan=S.plans[e.id];
   if(plan)c.append(node("div","plan set","Going "+fmtDate(plan.date,true)));
   const when=node("div","when");when.innerHTML=CAL;when.append(document.createTextNode(e.when||"Date TBD"));c.append(when);
+  if(e.img){const im=node("img","cover");im.src=e.img;im.alt=e.imgAlt||"";im.loading="lazy";c.append(im)}
   const facts=node("div","facts");
   const f1=node("div","fact");f1.append(node("small",null,"Approx. cost"),node("b",null,e.cost||"TBD"));
   const f2=node("div","fact");f2.append(node("small",null,"Time needed"),node("b",null,e.time||"TBD"));
-  facts.append(f1,f2);c.append(facts);
+  facts.append(f1,f2);if(!e.img)c.append(facts);
   if(e.blurb)c.append(node("p","blurb",e.blurb));
   if(e.bar){const chips=node("div","chips");chips.append(node("span","chip bar","19+"));if(e.rain)chips.append(node("span","chip rain","Rain-proof"));c.append(chips)}else if(e.rain){const chips=node("div","chips");chips.append(node("span","chip rain","Rain-proof"));c.append(chips)}
+  if(e.tickets){const t=node("a","join tix","Get tickets");t.href=e.tickets;t.target="_blank";t.rel="noopener";c.append(t);return c}
   const crew=crewFor(e.id);
   const row=node("div","crew");
   const lbl=node("div","crew-label");lbl.append(node("b",null,"Interested"),node("span","count",String(crew.length)));
